@@ -58,7 +58,7 @@ function logout_all(user, callback) {
 
 function check_api_token(name, token, callback) {
     database.collection('users').findOne({username: name, api_token: token}, {}, function (err, doc) {
-        if (err === undefined && doc !== undefined) {
+        if (!err && doc) {
             callback(doc);
         } else {
             callback(undefined);

@@ -91,25 +91,36 @@ router.post('/', database.require_connection, auth.require_user, function(req, r
 // Get some data, via the API.
 // TODO: Make this take parameters.
 // TODO: Reutrn proper status codes.
-router.get('/api/', database.require_connection, auth.require_api, function(req, res, next) {
-    graphs.retreive_graph('mygraph', function (points) {
-        res.setHeader('Content-Type', 'application/json')
-        res.send(JSON.stringify(points))
-    })
-})
+// router.get('/api/', database.require_connection, auth.require_api, function(req, res, next) {
+//     graphs.retreive_graph('mygraph', function (graph) {
+//         res.setHeader('Content-Type', 'application/json')
+//         res.send(JSON.stringify(graph))
+//     })
+// })
 
 // Post some data, via the API.
 // TODO: Make this return proper status codes.
+// TODO: Proper error checking
 router.post('/api/', database.require_connection, auth.require_api, function(req, res, next) {
-    let jdata = JSON.parse(req.body)
-    for (let d of jdata) {
-        if (d.graph !== undefined) {
+    for (let d of req.body.datasets) {
+        if (d.graph && d.points) {
             console.log('Inserting point:', d.graph, d.points)
-            graphs.post_datapoints(d.graph, d.points, function () {
-                res.send('Cool bananas!')
+            var points = [];
+            for (let i in d.points) {
+                points.push({
+                    time: parseInt(i.time),
+                    count: parseInt(i.count),
+                    text: ''
+                })
+            }
+            graphs.post_datapoints(d.graph, req.auth.user.username, d.points, function () {
+                // TODO: send something different if it actually fails
+                res.send('All good')
             })
         } else {
             console.log('Someone tried to push database to an invalid graph')
+            res.status(404)
+            res.send('Graph not found')
         }
     }
 })
