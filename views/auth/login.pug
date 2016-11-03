@@ -1,0 +1,21 @@
+extends ../layout
+
+block content
+    h1 Login
+    if error == 1
+        p ERROR: Invalid login details
+    if error == 2
+        p ERROR: Internal error. Could not log in.
+    if error == 3
+        p ERROR: Token invalid. Please log in again.
+    form(action="/auth/login" method="POST")
+        p Username
+        input(name="username")
+        p Password
+        input(name="password", type="password")
+        br
+        input(type="submit", value="Login")
+    p
+        | Alternatively, you can&nbsp;
+        a(href="/auth/create") create a new account
+        | .

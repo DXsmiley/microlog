@@ -1,0 +1,63 @@
+extends layout
+
+block content
+
+    p set interval:
+        span &nbsp; &nbsp;
+        a(href="?i=2678400") month
+        span &nbsp; | &nbsp;
+        a(href="?i=604800") week
+        span &nbsp; | &nbsp;
+        a(href="?i=86400") day
+        span &nbsp; | &nbsp;
+        a(href="?i=3600") hour
+        span &nbsp; | &nbsp;
+        a(href="?i=300") 5 minutes
+        span &nbsp; | &nbsp;
+        a(href="?i=60") minute
+    canvas(id="mychart")
+
+    p Add data point:
+    form(action="/graphs/", method="POST")
+        //- label Graph
+        //-     input(name="graph", value=name, visible=false)
+        //-     br
+        input(name="graph", value=name, type="hidden")
+        label Count
+            input(name="count", value="1")
+            br
+        //- label Time
+        //-     input(name="time", value="0")
+        //-     br
+        label Text
+            input(name="text")
+            br
+        input(type="submit", value="Submit")
+
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.bundle.js")
+
+    script.
+        var data = {
+            labels: [ !{labels} ],
+            datasets: [
+                {
+                    label: "#{friendly_name}",
+                    fillColor: "rgba(220,220,220,0.2)",
+                    strokeColor: "rgba(220,220,220,1)",
+                    pointColor: "rgba(220,220,220,1)",
+                    pointStrokeColor: "#fff",
+                    pointHighlightFill: "#fff",
+                    pointHighlightStroke: "rgba(220,220,220,1)",
+                    data: [ #{counts} ]
+                }
+            ]
+        };
+
+        var ctx = document.getElementById("mychart").getContext("2d");
+        var myLineChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+            options: {
+                animation: false
+            }
+        });

@@ -1,0 +1,53 @@
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    margin: 0px;
+    max-width: 100vw;
+}
+
+div {
+    margin: 0px;
+    padding: 0px;
+}
+
+a {
+  color: #00B7FF;
+}
+
+label, input {
+    margin: 3px;
+}
+
+div.titlebar {
+    width: 100%;
+    background-color: #00B7FF;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+div.titlebar span {
+    padding: 0px 20px;
+    color: white;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+div.titlebar span a {
+    color: white;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+div.wrapper {
+    margin: 30px;
+}
+
+canvas {
+    margin: -5px;
+    max-width: 90vw;
+}
+
+code {
+    background-color: #f0f0f0;
+    padding: 2px;
+    border-radius: 3px;
+}

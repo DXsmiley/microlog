@@ -1,0 +1,23 @@
+extends ../layout
+
+block content
+    h1 Create Account
+    if error == 1
+        p ERROR: Account could not be created
+    if error == 4
+        p ERROR: Passwords did not match
+    if error == 5
+        p ERROR: Username already taken
+    form(action="/auth/create" method="POST")
+        p Username
+        input(name="username")
+        p Password
+        input(type="password", name="password")
+        p Repeat Password
+        input(type="password", name="password_repeat")
+        br
+        input(type="submit", value="Create Account")
+    p
+        | Alternatively, you can&nbsp;
+        a(href="/auth/login") log in to an existing account
+        | .

@@ -1,0 +1,17 @@
+doctype html
+html
+    head
+        title= title
+        link(rel='stylesheet', href='/stylesheets/style.css')
+    body
+        div(class="titlebar")
+            span
+                a(href="/") Microlog
+            span |
+            span
+                a(href="/dashboard") Dashboard
+            span |
+            span
+                a(href="/docs") Docs
+        div(class="wrapper")
+            block content

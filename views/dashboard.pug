@@ -1,0 +1,20 @@
+extends layout
+
+block content
+    h1 My Dashboard
+    p Logged in as #{user.username}.
+    p
+        a(href="/auth/logout") Logout
+    button(onclick="document.getElementById('token').style.display='block'") Show API Token
+    div(id="token", style="display: none")
+        p Token:&nbsp;
+            code #{user.api_token}
+    h2 My Graphs
+    for i in user.graphs
+        p
+            a(href="/graphs/" + i.id) #{i.name}
+    h2 Create Graph
+    form(action="/dashboard/new" method="POST")
+        label Name
+        input(name="graph_name")
+        input(type="submit", value="Create")
