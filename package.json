@@ -1,22 +1,25 @@
 {
-  "name": "microlog",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "start": "node ./bin/www"
-  },
-  "dependencies": {
-    "body-parser": "~1.15.2",
-    "chart.js": "^2.3.0",
-    "cookie-parser": "^1.4.3",
-    "debug": "~2.2.0",
-    "express": "~4.14.0",
-    "express-authentication": "^0.3.2",
-    "mongodb": "^2.2.11",
-    "morgan": "~1.7.0",
-    "password-hash": "^1.2.2",
-    "pug": "~2.0.0-beta6",
-    "randomstring": "^1.1.5",
-    "serve-favicon": "~2.3.0"
-  }
+    "name": "microlog",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "start": "node ./bin/www"
+    },
+    "dependencies": {
+        "body-parser": "~1.15.2",
+        "chart.js": "^2.3.0",
+        "cookie-parser": "^1.4.3",
+        "debug": "~2.2.0",
+        "express": "~4.14.0",
+        "express-authentication": "^0.3.2",
+        "mongodb": "^2.2.11",
+        "morgan": "~1.7.0",
+        "password-hash": "^1.2.2",
+        "pug": "~2.0.0-beta6",
+        "randomstring": "^1.1.5",
+        "serve-favicon": "~2.3.0"
+    },
+    "engines": {
+        "node": "6.3.0"
+    }
 }
