@@ -18,12 +18,14 @@ function retreive_graph(graph, callback) {
 
 // Takes in a partial tree and sums the range
 function calculate_interval(tree, left, right) {
-    var o = {sum: 0, count: 0}
+    var o = {sum: 0, count: 0, min: Infinity, max: -Infinity}
     for (let level = 0; left < right; ++level, left >>= 1, right >>= 1) {
         if (left & 1) {
             if (tree[level][left]) {
                 o.sum += tree[level][left].sum
                 o.count += tree[level][left].count
+                o.min = Math.min(o.min, tree[level][left].min)
+                o.max = Math.max(o.max, tree[level][left].max)
             }
             left++
         }
@@ -31,7 +33,9 @@ function calculate_interval(tree, left, right) {
             right--
             if (tree[level][right]) {
                 o.sum += tree[level][right].sum
-                o.count += tree[level][right].count                
+                o.count += tree[level][right].count
+                o.min = Math.min(o.min, tree[level][right].min)
+                o.max = Math.max(o.max, tree[level][right].max)
             }
         }
     }
@@ -63,17 +67,24 @@ function retreive_intervals(graph, intervals, callback) {
 // Takes in a list of datapoint to update and returns a mongoDB
 // query that can then be used to make the updates
 function tree_datapoint_update_command(points) {
-    var pieces = defaultdict(0)
+    var inc = defaultdict(0)
+    var min = defaultdict([])
+    var max = defaultdict([])
     for (let point of points) {
         let index = point.time
+        var value = parseInt(point.count)
         for (let level = 0; level < MAX_TREE_LEVEL; level++) {
-            pieces['tree.' + level + '.' + index + '.sum'] += parseInt(point.count)
-            pieces['tree.' + level + '.' + index + '.count'] += 1
+            inc['tree.' + level + '.' + index + '.sum'] += value
+            inc['tree.' + level + '.' + index + '.count'] += 1
+            min['tree.' + level + '.' + index + '.min'].push(value)
+            max['tree.' + level + '.' + index + '.max'].push(value)
             index >>= 1
         }
     }
-    var result = {}
-    for (let i in pieces) result[i] = pieces[i]
+    var result = {$inc: {}, $min: {}, $max: {}, $push: {points: {$each: points} }}
+    for (let i in inc) result['$inc'][i] = inc[i]
+    for (let i in min) result['$min'][i] = Math.min(...min[i])
+    for (let i in max) result['$max'][i] = Math.max(...max[i])
     return result
 }
 
@@ -106,10 +117,7 @@ function tree_datapoint_query_command(ranges) {
 function post_datapoints(graph, username, dpoints, callback) {
     database.collection('graphs').updateOne(
         {_id: graph, owner: username},
-        {
-            $push: {points: {$each: dpoints} },
-            $inc: tree_datapoint_update_command(dpoints)
-        },
+        tree_datapoint_update_command(dpoints),
         function (err, result) {
             if (err) {
                 console.error('Failed to post data points');
