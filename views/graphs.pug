@@ -2,7 +2,7 @@ extends layout
 
 block content
 
-    p set interval:
+    p interval:
         span &nbsp; &nbsp;
         a(href="?i=2678400") month
         span &nbsp; | &nbsp;
@@ -15,6 +15,17 @@ block content
         a(href="?i=300") 5 minutes
         span &nbsp; | &nbsp;
         a(href="?i=60") minute
+
+    p aggregator:
+        span &nbsp; &nbsp;
+        a(href="?a=sum") sum
+        span &nbsp; | &nbsp;
+        a(href="?a=average") average
+        span &nbsp; | &nbsp;
+        a(href="?a=minimum") minimum
+        span &nbsp; | &nbsp;
+        a(href="?a=maximum") maximum
+
     canvas(id="mychart")
 
     p Add data point:
