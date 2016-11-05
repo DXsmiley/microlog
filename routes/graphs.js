@@ -68,7 +68,6 @@ const AGGREGATORS = {
 router.get('/:name', database.require_connection, function(req, res, next) {
     var name = req.params.name
     graphs.retreive_metadata(name, function(metadata) {
-        console.log('METADATA:', metadata)
         // Determine interval width.
         var n_ints = 40 // number of intervals
         var interval = undefined
@@ -82,7 +81,6 @@ router.get('/:name', database.require_connection, function(req, res, next) {
         if (!(aggregator in AGGREGATORS) && metadata.view !== undefined) aggregator = metadata.view.interval
         if (!(aggregator in AGGREGATORS)) aggregator = 'sum'
         let agg_func = AGGREGATORS[aggregator]
-        console.log(req.query.i, aggregator)
         // Redirection to example graph if nothing specified
         if (name === undefined || name === '') name = 'example'
         // Calculate the intervals
@@ -96,7 +94,6 @@ router.get('/:name', database.require_connection, function(req, res, next) {
             axis.push('"' + nicedate(t + interval) + '"')
         }
         graphs.retreive_intervals(name, spans, function (g) {
-            console.log(g)
             res.render('graphs', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
         })
         graphs.post_metadata(name, {
@@ -119,8 +116,6 @@ router.post('/', database.require_connection, auth.require_user, function(req, r
     if (d.graph !== undefined) {
         console.log('Inserting point:', d.graph, d.payload)
         graphs.post_datapoints(d.graph, req.auth.user.username, [d.payload], function (error) {
-            console.log('Posted datapoints')
-            console.log('/graphs/' + d.graph)
             res.redirect(303, '/graphs/' + d.graph)
         })
     } else {

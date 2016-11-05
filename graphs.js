@@ -46,7 +46,7 @@ function calculate_interval(tree, left, right) {
 
 function retreive_intervals(graph, intervals, callback) {
     var fields = tree_datapoint_query_command(intervals)
-    for (let i in METADATA_FIELDS) fields[i] = 1
+    for (let i of METADATA_FIELDS) fields[i] = 1
     database.collection('graphs').findOne(
         {_id: graph},
         {fields: fields},
@@ -55,12 +55,11 @@ function retreive_intervals(graph, intervals, callback) {
                 console.error('Gettings points from database failed');
                 console.error(err);
             } else {
-                console.log(doc)
-                var result = [];
+                var result = []
                 for (let i of intervals)
                     result.push(calculate_interval(doc.tree, i.left, i.right))
                 doc.intervals = result
-                callback(doc);
+                callback(doc)
             }
         }
     );
@@ -117,7 +116,6 @@ function tree_datapoint_query_command(ranges) {
 
 // This needs to pass an error if it fails.
 function post_datapoints(graph, username, dpoints, callback) {
-    console.log('COMMAND:', tree_datapoint_update_command(dpoints))
     database.collection('graphs').updateOne(
         {_id: graph, owner: username},
         tree_datapoint_update_command(dpoints),
@@ -127,9 +125,8 @@ function post_datapoints(graph, username, dpoints, callback) {
                 console.error(err);
                 if (callback) callback(true);
             } else {
-                if (result.result.nModified == 0) console.error('Nothing was modified!')
+                if (result.result.nModified == 0) console.error('Failed to post data points: nothing was modified')
                 else console.log('Datapoints added to', graph);
-                // console.log(result);
                 if (callback) callback(false);
             }
         }
@@ -166,9 +163,11 @@ function post_metadata(graph, metadata, callback) {
 }
 
 function retreive_metadata(graph, callback) {
+    var fields = {}
+    for (let i of METADATA_FIELDS) fields[i] = 1
     database.collection('graphs').findOne(
         {_id: graph},
-        {owner: true, name: true, view: true},
+        {fields: fields},
         function (err, result) {
             if (err) {
                 console.error('Failed to get graph metadata')
