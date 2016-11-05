@@ -31,6 +31,19 @@ function extract_post(req) {
     }
 }
 
+var monthNames = [
+    "January", "February", "March",
+    "April", "May", "June", "July",
+    "August", "September", "October",
+    "November", "December"
+]
+
+function nicedate(t) {
+    var d = new Date(t * 1000)
+    return monthNames[d.getMonth()] + ' ' + d.getDate()
+           + ' / ' + d.getHours() + ':' + d.getMinutes()
+}
+
 // Date library stuff.
 function current_time() {
     return Math.floor((new Date).getTime() / 1000)
@@ -44,25 +57,40 @@ tdelta = {
     week: 7 * 24 * 60 * 60
 }
 
+const AGGREGATORS = {
+    sum: (x) => x.sum,
+    average: (x) => x.count ? x.sum / x.count : 0
+}
+
 // Get some data, return as human-readable graph.
 router.get('/:name', database.require_connection, function(req, res, next) {
-    var n_ints = 120 // number of intervals
-    var interval = undefined;
-    if (req.query.i) interval = parseInt(req.query.i);
-    if (interval < 0) interval = 1;
-    if (interval > tdelta.week) interval = tdelta.week;
+    // Determine interval width.
+    var n_ints = 40 // number of intervals
+    var interval = undefined
+    if (req.query.i) interval = parseInt(req.query.i)
+    if (!interval) interval = tdelta.minute
+    if (interval < 0) interval = 1
+    if (interval > tdelta.week) interval = tdelta.week
+    // Determine aggregation function
+    var aggregator = req.query.a;
+    if (!(aggregator in AGGREGATORS)) aggregator = 'sum'
+    let agg_func = AGGREGATORS[aggregator]
+    console.log(req.query.i, aggregator)
+    // Redirection to example graph if nothing specified
     var name = req.params.name
     if (name === undefined || name === '') name = 'example'
-    graphs.retreive_graph(name, function (g) {
-        console.log(g);
-        if (!interval) interval = g.view_timestep
-        if (!interval) interval = tdelta.minute
-        if (!g.points) g.points = [];
-        graphs.post_metadata(name, {'view_timestep': interval})
-        interval = Math.ceil(interval / 3);
-        var ct = current_time()
-        var points = graphs.aggregate_points(ct - interval * n_ints, ct, interval, g.points)
-        res.render('data', {name: name, friendly_name: g.name, labels: points.axis, counts: points.vals})
+    // Calculate the intervals
+    var time_now = current_time()
+    var spans = []
+    var axis = []
+    var time_start = time_now - n_ints * interval
+    for (let t = time_start; t < time_now; t += interval) {
+        spans.push({left: t, right: t + interval})
+        axis.push('"' + nicedate(t) + '"')
+    }
+    graphs.retreive_intervals(name, spans, function (g) {
+        console.log(g)
+        res.render('data', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
     })
 })
 
