@@ -93,7 +93,7 @@ router.get('/:name', database.require_connection, function(req, res, next) {
     }
     graphs.retreive_intervals(name, spans, function (g) {
         console.log(g)
-        res.render('data', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
+        res.render('graphs', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
     })
 })
 
