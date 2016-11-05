@@ -59,7 +59,9 @@ tdelta = {
 
 const AGGREGATORS = {
     sum: (x) => x.sum,
-    average: (x) => x.count ? x.sum / x.count : 0
+    average: (x) => x.count ? x.sum / x.count : 0,
+    minimum: (x) => x.min === Infinity || x.min === undefined ? 0 : x.min,
+    maximum: (x) => x.max === -Infinity || x.max === undefined ? 0 : x.max
 }
 
 // Get some data, return as human-readable graph.
@@ -83,10 +85,11 @@ router.get('/:name', database.require_connection, function(req, res, next) {
     var time_now = current_time()
     var spans = []
     var axis = []
-    var time_start = time_now - n_ints * interval
-    for (let t = time_start; t < time_now; t += interval) {
+    var time_end = Math.floor(time_now / interval) * interval
+    var time_start = time_end - n_ints * interval
+    for (let t = time_start; t < time_end; t += interval) {
         spans.push({left: t, right: t + interval})
-        axis.push('"' + nicedate(t) + '"')
+        axis.push('"' + nicedate(t + interval) + '"')
     }
     graphs.retreive_intervals(name, spans, function (g) {
         console.log(g)
