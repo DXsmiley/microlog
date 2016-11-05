@@ -2,7 +2,9 @@ var dbclient = require('mongodb').MongoClient;
 
 var db = null;
 
-dbclient.connect(process.env.DATABASE_LOGIN, function(err, adb) {
+const URL = process.env.DATABASE_LOGIN || 'mongodb://localhost:27017/microlog'
+
+dbclient.connect(URL, function(err, adb) {
     if (err === null) {
         console.log('Connected to the database.');
         db = adb;
