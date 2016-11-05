@@ -66,34 +66,43 @@ const AGGREGATORS = {
 
 // Get some data, return as human-readable graph.
 router.get('/:name', database.require_connection, function(req, res, next) {
-    // Determine interval width.
-    var n_ints = 40 // number of intervals
-    var interval = undefined
-    if (req.query.i) interval = parseInt(req.query.i)
-    if (!interval) interval = tdelta.minute
-    if (interval < 0) interval = 1
-    if (interval > tdelta.week) interval = tdelta.week
-    // Determine aggregation function
-    var aggregator = req.query.a;
-    if (!(aggregator in AGGREGATORS)) aggregator = 'sum'
-    let agg_func = AGGREGATORS[aggregator]
-    console.log(req.query.i, aggregator)
-    // Redirection to example graph if nothing specified
     var name = req.params.name
-    if (name === undefined || name === '') name = 'example'
-    // Calculate the intervals
-    var time_now = current_time()
-    var spans = []
-    var axis = []
-    var time_end = Math.floor(time_now / interval) * interval
-    var time_start = time_end - n_ints * interval
-    for (let t = time_start; t < time_end; t += interval) {
-        spans.push({left: t, right: t + interval})
-        axis.push('"' + nicedate(t + interval) + '"')
-    }
-    graphs.retreive_intervals(name, spans, function (g) {
-        console.log(g)
-        res.render('graphs', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
+    graphs.retreive_metadata(name, function(metadata) {
+        console.log('METADATA:', metadata)
+        // Determine interval width.
+        var n_ints = 40 // number of intervals
+        var interval = undefined
+        if (req.query.i) interval = parseInt(req.query.i)
+        if (!interval && metadata.view !== undefined) interval = metadata.view.interval
+        if (!interval) interval = tdelta.minute
+        if (interval < 0) interval = 1
+        if (interval > tdelta.week) interval = tdelta.week
+        // Determine aggregation function
+        var aggregator = req.query.a;
+        if (!(aggregator in AGGREGATORS) && metadata.view !== undefined) aggregator = metadata.view.interval
+        if (!(aggregator in AGGREGATORS)) aggregator = 'sum'
+        let agg_func = AGGREGATORS[aggregator]
+        console.log(req.query.i, aggregator)
+        // Redirection to example graph if nothing specified
+        if (name === undefined || name === '') name = 'example'
+        // Calculate the intervals
+        var time_now = current_time()
+        var spans = []
+        var axis = []
+        var time_end = Math.floor(time_now / interval) * interval
+        var time_start = time_end - n_ints * interval
+        for (let t = time_start; t < time_end; t += interval) {
+            spans.push({left: t, right: t + interval})
+            axis.push('"' + nicedate(t + interval) + '"')
+        }
+        graphs.retreive_intervals(name, spans, function (g) {
+            console.log(g)
+            res.render('graphs', {name: name, friendly_name: g.name, labels: axis, counts: g.intervals.map(agg_func)})
+        })
+        graphs.post_metadata(name, {
+            'view.interval': interval,
+            'view.aggregator': aggregator
+        })
     })
 })
 

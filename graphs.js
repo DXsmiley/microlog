@@ -3,7 +3,7 @@ var database = require('./database');
 
 const MAX_TREE_LEVEL = 21;
 const MAX_INTERVAL_WIDTH = 1 << MAX_TREE_LEVEL;
-const METADATA_FIELDS = ['owner', 'name', 'view_timestep'];
+const METADATA_FIELDS = ['owner', 'name', 'view.interval', 'view.aggregator'];
 
 function retreive_graph(graph, callback) {
     database.collection('graphs').findOne({_id : graph}, {}, function (err, doc) {
@@ -19,23 +19,25 @@ function retreive_graph(graph, callback) {
 // Takes in a partial tree and sums the range
 function calculate_interval(tree, left, right) {
     var o = {sum: 0, count: 0, min: Infinity, max: -Infinity}
-    for (let level = 0; left < right; ++level, left >>= 1, right >>= 1) {
-        if (left & 1) {
-            if (tree[level][left]) {
-                o.sum += tree[level][left].sum
-                o.count += tree[level][left].count
-                o.min = Math.min(o.min, tree[level][left].min)
-                o.max = Math.max(o.max, tree[level][left].max)
+    if (tree !== undefined) {
+        for (let level = 0; left < right; ++level, left >>= 1, right >>= 1) {
+            if (left & 1) {
+                if (tree[level] !== undefined && tree[level][left] !== undefined) {
+                    o.sum += tree[level][left].sum
+                    o.count += tree[level][left].count
+                    o.min = Math.min(o.min, tree[level][left].min)
+                    o.max = Math.max(o.max, tree[level][left].max)
+                }
+                left++
             }
-            left++
-        }
-        if (right & 1) {
-            right--
-            if (tree[level][right]) {
-                o.sum += tree[level][right].sum
-                o.count += tree[level][right].count
-                o.min = Math.min(o.min, tree[level][right].min)
-                o.max = Math.max(o.max, tree[level][right].max)
+            if (right & 1) {
+                right--
+                if (tree[level] !== undefined && tree[level][right] !== undefined) {
+                    o.sum += tree[level][right].sum
+                    o.count += tree[level][right].count
+                    o.min = Math.min(o.min, tree[level][right].min)
+                    o.max = Math.max(o.max, tree[level][right].max)
+                }
             }
         }
     }
@@ -115,6 +117,7 @@ function tree_datapoint_query_command(ranges) {
 
 // This needs to pass an error if it fails.
 function post_datapoints(graph, username, dpoints, callback) {
+    console.log('COMMAND:', tree_datapoint_update_command(dpoints))
     database.collection('graphs').updateOne(
         {_id: graph, owner: username},
         tree_datapoint_update_command(dpoints),
@@ -124,7 +127,9 @@ function post_datapoints(graph, username, dpoints, callback) {
                 console.error(err);
                 if (callback) callback(true);
             } else {
-                console.log('Datapoints added to', graph);
+                if (result.result.nModified == 0) console.error('Nothing was modified!')
+                else console.log('Datapoints added to', graph);
+                // console.log(result);
                 if (callback) callback(false);
             }
         }
@@ -155,6 +160,21 @@ function post_metadata(graph, metadata, callback) {
             } else {
                 console.log('Metadata set on', graph)
                 if (callback) callback()
+            }
+        }
+    )
+}
+
+function retreive_metadata(graph, callback) {
+    database.collection('graphs').findOne(
+        {_id: graph},
+        {owner: true, name: true, view: true},
+        function (err, result) {
+            if (err) {
+                console.error('Failed to get graph metadata')
+                console.error(err)
+            } else {
+                callback(result)
             }
         }
     )
@@ -194,5 +214,6 @@ module.exports = {
     post_datapoints: post_datapoints,
     post_metadata: post_metadata,
     aggregate_points: aggregate_points,
-    retreive_intervals: retreive_intervals
+    retreive_intervals: retreive_intervals,
+    retreive_metadata: retreive_metadata
 }
